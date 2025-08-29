@@ -7,7 +7,7 @@ const port = 3000;
 
 let counter = 0;
 
-async function scrapeData(counter) {
+async function scrapeData(counter, url) {
   const browser = await puppeteer.launch({
     args: ["--no-sandbox"], // Required.
     headless: "shell",
@@ -17,10 +17,7 @@ async function scrapeData(counter) {
 
   console.info(`[${counter}] Navigating to page...`);
 
-  await page.goto(
-    "https://findbolig.nu/da-dk/udlejere/oestergaarden/ekstern-venteliste/",
-    { waitUntil: "networkidle2" }
-  );
+  await page.goto(url, { waitUntil: "networkidle2" });
 
   console.info(`[${counter}] Accepting cookies...`);
 
@@ -32,6 +29,8 @@ async function scrapeData(counter) {
 
   if (elementHtml.includes("Lukket for opskrivning")) {
     console.info(`[${counter}] Closed for registration`);
+  } else {
+    console.info(`[${counter}] Open for registration`);
   }
 
   console.info(`[${counter}] Done`);
@@ -41,11 +40,14 @@ async function scrapeData(counter) {
 
 // Every 5 minutes
 cron.schedule("*/5 * * * *", async () => {
-  await scrapeData(counter++);
+  await scrapeData(
+    counter++,
+    "https://findbolig.nu/da-dk/udlejere/oestergaarden/ekstern-venteliste/"
+  );
 });
 
 app.get("/scrape", async (req, res) => {
-  await scrapeData(counter++);
+  await scrapeData(counter++, "https://findbolig.nu");
   res.send("Scraped");
 });
 
