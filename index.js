@@ -5,13 +5,15 @@ const cron = require("node-cron");
 
 const port = 3000;
 
-cron.schedule("* * * * *", async () => {
+async function scrapeData() {
   const browser = await puppeteer.launch({
     args: ["--no-sandbox"], // Required.
     headless: "shell",
   });
+
   const page = await browser.newPage();
 
+  console.group();
   console.info("Navigating to page...");
 
   await page.goto(
@@ -33,7 +35,19 @@ cron.schedule("* * * * *", async () => {
 
   console.info("Done");
 
+  console.groupEnd();
+
   await browser.close();
+}
+
+// Every 5 minutes
+cron.schedule("*/5 * * * *", async () => {
+  await scrapeData();
+});
+
+app.get("/scrape", async (req, res) => {
+  await scrapeData();
+  res.send("Scraped");
 });
 
 app.get("/health", async (req, res) => {

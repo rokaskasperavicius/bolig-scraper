@@ -1,3 +1,4 @@
+# https://stackoverflow.com/a/71452266/10836486
 FROM node:24.1.0
 
 # Install necessary dependencies for Puppeteer and Chromium
