@@ -5,7 +5,9 @@ const cron = require("node-cron");
 
 const port = 3000;
 
-async function scrapeData() {
+let counter = 0;
+
+async function scrapeData(counter) {
   const browser = await puppeteer.launch({
     args: ["--no-sandbox"], // Required.
     headless: "shell",
@@ -13,15 +15,14 @@ async function scrapeData() {
 
   const page = await browser.newPage();
 
-  console.group();
-  console.info("Navigating to page...");
+  console.info(`[${counter}] Navigating to page...`);
 
   await page.goto(
     "https://findbolig.nu/da-dk/udlejere/oestergaarden/ekstern-venteliste/",
     { waitUntil: "networkidle2" }
   );
 
-  console.info("Accepting cookies...");
+  console.info(`[${counter}] Accepting cookies...`);
 
   await page.evaluate(() => {
     CookieInformation.submitAllCategories();
@@ -30,23 +31,21 @@ async function scrapeData() {
   const elementHtml = await page.$eval("#app", (el) => el.innerHTML);
 
   if (elementHtml.includes("Lukket for opskrivning")) {
-    console.info("Closed for registration");
+    console.info(`[${counter}] Closed for registration`);
   }
 
-  console.info("Done");
-
-  console.groupEnd();
+  console.info(`[${counter}] Done`);
 
   await browser.close();
 }
 
 // Every 5 minutes
 cron.schedule("*/5 * * * *", async () => {
-  await scrapeData();
+  await scrapeData(counter++);
 });
 
 app.get("/scrape", async (req, res) => {
-  await scrapeData();
+  await scrapeData(counter++);
   res.send("Scraped");
 });
 
