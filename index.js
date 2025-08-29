@@ -6,7 +6,10 @@ const cron = require("node-cron");
 const port = 3000;
 
 cron.schedule("* * * * *", async () => {
-  const browser = await puppeteer.launch({ headless: "shell" });
+  const browser = await puppeteer.launch({
+    args: ["--no-sandbox"], // Required.
+    headless: "shell",
+  });
   const page = await browser.newPage();
 
   console.info("Navigating to page...");
